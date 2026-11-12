@@ -453,7 +453,7 @@ suspend fun renderScenesToMp4(
     muxer.release()
 }
 
-fun saveVideoToGallery(context: Context, videoFile: File): Boolean = try {
+fun saveVideoToGallery(context: Context, videoFile: File): Boolean  try {
     val values = ContentValues().apply {
         put(MediaStore.Video.Media.DISPLAY_NAME, videoFile.name)
         put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
