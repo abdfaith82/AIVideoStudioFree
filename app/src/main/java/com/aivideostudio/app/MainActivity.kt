@@ -453,18 +453,25 @@ suspend fun renderScenesToMp4(
     muxer.release()
 }
 
-fun saveVideoToGallery(context: Context, videoFile: File): Boolean  try {
-    val values = ContentValues().apply {
-        put(MediaStore.Video.Media.DISPLAY_NAME, videoFile.name)
-        put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/AIVideoStudio")
+// دالة مصححة بالكامل لتجنب أخطاء تعبيرات الـ return
+fun saveVideoToGallery(context: Context, videoFile: File): Boolean {
+    return try {
+        val values = ContentValues().apply {
+            put(MediaStore.Video.Media.DISPLAY_NAME, videoFile.name)
+            put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/AIVideoStudio")
+            }
         }
+        val uri = context.contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values) ?: return false
+        context.contentResolver.openOutputStream(uri)?.use { out -> 
+            videoFile.inputStream().use { input -> input.copyTo(out) } 
+        }
+        true
+    } catch (e: Exception) { 
+        false 
     }
-    val uri = context.contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values) ?: return false
-    context.contentResolver.openOutputStream(uri)?.use { out -> videoFile.inputStream().use { it.copyTo(out) } }
-    true
-} catch (e: Exception) { false }
+}
 
 fun shareVideoFile(context: Context, videoFile: File) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", videoFile)
